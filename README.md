@@ -1,86 +1,69 @@
-# @alex/dsh-nocturne-memory
+# dsh-nocturne-memory
 
-DeepSeek Harness plugin: **Nocturne Memory client** — automated long-term
-memory for the agent, backed by **your own**
-[Nocturne Memory](https://github.com/martin22/Nocturne-Memory) MCP server.
+给 DeepSeek Harness 接上 **Nocturne Memory** 长期记忆:boot 协议 + 记忆
+读写/搜索/更新,后端是你自己的 Nocturne MCP 服务器。
 
-Port of [pi-nocturne-memory](https://github.com/RealAlexandreAI/pi-nocturne-memory)
-to the dsh (Cordis) plugin model — same MCP protocol, same boot protocol,
-same tools.
+> 由 [pi-nocturne-memory](https://github.com/RealAlexandreAI/pi-nocturne-memory) 移植,
+> 协议与工具名完全一致。
 
-## Tools
+## 工具
 
-| tool | what it does |
+| 工具 | 说明 |
 |---|---|
-| `nocturne_boot` | session-start memory load: core memories + recent context + glossary |
-| `nocturne_read` | read a memory by URI (`system://…`, `core://agent`, …) |
-| `nocturne_search` | search memories by keywords (optional domain filter) |
-| `nocturne_create` | create a memory node (supports `[Baseline]/[Deviation]/[Result]/[Reusable judgment]` records) |
-| `nocturne_update` | patch (old_string/new_string) or append to an existing memory |
+| `nocturne_boot` | 会话开始时加载:核心记忆 + 近期上下文 + 术语表 |
+| `nocturne_read` | 按 URI 读记忆(`system://…`、`core://agent`…) |
+| `nocturne_search` | 按关键词搜记忆(可加 domain 过滤) |
+| `nocturne_create` | 新建记忆节点(支持 `[Baseline]/[Deviation]/[Result]/[Reusable judgment]`) |
+| `nocturne_update` | patch(old_string/new_string)或 append 更新记忆 |
 
-## Install
+## 安装
 
 ```sh
-dsh plugin add @alex/dsh-nocturne-memory
+dsh plugin add dsh-nocturne-memory
 ```
 
-Requires a reachable Nocturne MCP server (your own instance — see the
-Nocturne Memory project for the server).
+需要你能连到自己的 Nocturne MCP 服务器(项目地址见
+[Nocturne Memory](https://github.com/martin22/Nocturne-Memory))。
 
-## Configuration
+## 配置
 
 ```yaml
 - id: memory
-  name: '@alex/dsh-nocturne-memory'
+  name: dsh-nocturne-memory
   config:
     mcp_url: http://localhost:PORT/mcp
-    mcp_auth_ref: NOCTURNE_MCP_AUTH   # env var name — recommended
-    # mcp_auth: <direct value>        # fallback when no ref is set
+    mcp_auth_ref: NOCTURNE_MCP_AUTH   # 推荐:环境变量名
+    # mcp_auth: <直接填 token>        # 备用
 ```
 
-| key | required | meaning |
+| 键 | 必填 | 说明 |
 |---|---|---|
-| `mcp_url` | ✅ | your Nocturne MCP server URL |
-| `mcp_auth_ref` | * | env-var name of the MCP auth token (via `ctx.credentials`) |
-| `mcp_auth` | * | direct auth token value (fallback) |
-| `protocol_version` | – | MCP protocol version (default `2024-11-05`) |
+| `mcp_url` | ✅ | 你的 Nocturne MCP 服务器地址 |
+| `mcp_auth_ref` | * | MCP 认证 token 的环境变量名 |
+| `mcp_auth` | * | 直接填 token(备用) |
+| `protocol_version` | – | MCP 协议版本(默认 `2024-11-05`) |
 
-\* one of `mcp_auth_ref` / `mcp_auth` is required.
+\* 二者填其一。
 
-## Privacy
+## 隐私
 
-- Memories live on **your own MCP server**; this plugin is a thin client
-  and stores nothing locally.
-- The auth token is resolved per operation via `ctx.credentials` — never
-  logged, never written by the plugin.
-- Only the memory URIs/queries/content you explicitly ask about cross the
-  wire to your server.
+- 记忆存在**你自己的 MCP 服务器**,本插件是薄客户端,本地不落任何内容
+- token 每次操作经 `ctx.credentials` 解析,不写日志
+- 只把你要读/写的记忆 URI、查询、内容发给你的服务器
 
-## Real integration
-
-Optional end-to-end tests that hit live services (not part of `npm test`):
-
-```bash
-# dsh-cloudflare-browser-run: real Cloudflare Browser Run API
-DSH_TEST_CF_TOKEN=<token> DSH_TEST_CF_ACCOUNT=<account> node --import tsx tests/real/real-cf.mjs
-
-# dsh-atuin: record into your real atuin database (daemon must run)
-node --import tsx tests/real/real-atuin.mjs
-
-# dsh-all-search: real AnySearch query
-ANYSEARCH_API_KEY=<key> node --import tsx tests/real/real-search.mjs
-
-# dsh-nocturne-memory: real Nocturne MCP server (reuses your pi config)
-node --import tsx tests/real/real-mcp.mjs
-```
-
-## Development
+## 开发
 
 ```bash
 npm install
 npm run typecheck
-npm test          # SSE parsing, text extraction
+npm test          # SSE 解析 / 文本提取
 npm run build
+```
+
+真实 MCP 集成测试(复用你 pi 的 Nocturne 配置):
+
+```bash
+node --import tsx tests/real/real-mcp.mjs
 ```
 
 ## License
