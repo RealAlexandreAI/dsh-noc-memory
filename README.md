@@ -23,13 +23,13 @@ Connects DeepSeek Harness to **Nocturne Memory**: session-start boot protocol pl
 ## Quick start
 
 ```sh
-dsh plugin add dsh-nocturne-memory
+dsh plugin --profile web add dsh-nocturne-memory
 ```
 
 Requires your own Nocturne MCP server (see the [Nocturne Memory](https://github.com/martin22/Nocturne-Memory) project).
 
 ```yaml
-- id: memory
+- id: nocturne-memory
   name: dsh-nocturne-memory
   config:
     mcp_url: http://localhost:PORT/mcp

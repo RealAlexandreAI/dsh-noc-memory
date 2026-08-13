@@ -17,7 +17,7 @@ import { defineTool } from '@deepseek-ai/dsh-tools'
 import { credentialRef, type ResolvedCredential } from '@deepseek-ai/dsh-credentials'
 
 export const name = 'nocturne-memory'
-export const inject = ['tools', 'credentials']
+export const inject = ['tools', 'credentials', 'systemPrompt']
 
 export interface Config {
   /** Nocturne MCP server URL, e.g. http://localhost:PORT/mcp. */
@@ -70,8 +70,11 @@ export function extractText(data: any): string {
   return data?.result?.content?.[0]?.text ?? ''
 }
 
+const REQUEST_TIMEOUT_MS = 30_000
+
 class NocturneClient {
   private sessionId: string | null = null
+  private initPromise: Promise<string | null> | null = null
 
   constructor(
     private readonly url: string,
@@ -80,25 +83,33 @@ class NocturneClient {
   ) {}
 
   private async initialize(): Promise<string | null> {
-    const resp = await fetch(this.url, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        Accept: 'application/json, text/event-stream',
-        Authorization: this.auth,
-      },
-      body: JSON.stringify({
-        jsonrpc: '2.0',
-        id: 'init-' + Date.now(),
-        method: 'initialize',
-        params: {
-          protocolVersion: this.protocolVersion,
-          capabilities: {},
-          clientInfo: { name: 'dsh-memory', version: '0.1.0' },
+    // Concurrent first calls share one handshake instead of racing sessions.
+    if (this.initPromise) return this.initPromise
+    this.initPromise = (async () => {
+      const resp = await fetch(this.url, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Accept: 'application/json, text/event-stream',
+          Authorization: this.auth,
         },
-      }),
-    })
-    return resp.headers.get('mcp-session-id')
+        body: JSON.stringify({
+          jsonrpc: '2.0',
+          id: 'init-' + Date.now(),
+          method: 'initialize',
+          params: {
+            protocolVersion: this.protocolVersion,
+            capabilities: {},
+            clientInfo: { name: 'dsh-memory', version: '0.1.0' },
+          },
+        }),
+        // A dead MCP server must not stall a dsh turn forever.
+        signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS),
+      })
+      if (!resp.ok) return null
+      return resp.headers.get('mcp-session-id')
+    })()
+    return this.initPromise
   }
 
   async call(method: string, params: Record<string, unknown>): Promise<any> {
@@ -115,6 +126,7 @@ class NocturneClient {
         'Mcp-Session-Id': this.sessionId,
       },
       body: JSON.stringify({ jsonrpc: '2.0', id: method + Date.now(), method, params }),
+      signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS),
     })
     if (!resp.ok) {
       const body = await resp.text().catch(() => '<unreadable>')
@@ -145,8 +157,16 @@ export function apply(ctx: Context, config: Config): void {
     return config.mcp_auth ?? ''
   }
 
-  const client = async (): Promise<NocturneClient> =>
-    new NocturneClient(config.mcp_url, await resolveAuth(), config.protocol_version ?? '2024-11-05')
+  // One client per plugin instance: the MCP session (initialize handshake +
+  // session id) is reused across tool calls instead of re-handshaking on every
+  // call. Auth is resolved on first use; changing the ref value needs a reload.
+  let cachedClient: Promise<NocturneClient> | null = null
+  const client = (): Promise<NocturneClient> => {
+    if (!cachedClient) {
+      cachedClient = (async () => new NocturneClient(config.mcp_url, await resolveAuth(), config.protocol_version ?? '2024-11-05'))()
+    }
+    return cachedClient
+  }
 
   const register = (tool: Record<string, unknown>): void => {
     ctx.tools.register(defineTool(tool as never))

@@ -2,11 +2,11 @@
 # Registers the Nocturne Memory tools (nocturne_boot / read / search /
 # create / update). Configure your own Nocturne MCP server:
 #
-#   - id: memory
+#   - id: nocturne-memory
 #     name: 'dsh-nocturne-memory'
 #     config:
 #       mcp_url: http://localhost:PORT/mcp
 #       mcp_auth_ref: NOCTURNE_MCP_AUTH   # env var name (recommended)
 - insert:
-    - id: memory
+    - id: nocturne-memory
       name: 'dsh-nocturne-memory'
