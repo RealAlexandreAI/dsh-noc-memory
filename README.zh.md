@@ -23,13 +23,13 @@
 ## 快速开始
 
 ```sh
-dsh plugin add dsh-nocturne-memory
+dsh plugin --profile web add dsh-nocturne-memory
 ```
 
 需要你能连到自己的 Nocturne MCP 服务器(项目见 [Nocturne Memory](https://github.com/martin22/Nocturne-Memory))。
 
 ```yaml
-- id: memory
+- id: nocturne-memory
   name: dsh-nocturne-memory
   config:
     mcp_url: http://localhost:PORT/mcp
