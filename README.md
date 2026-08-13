@@ -1,66 +1,67 @@
+<p align="center">
+  <img src="assets/readme/hero.svg" alt="dsh-nocturne-memory — long-term memory for DeepSeek Harness" width="100%">
+</p>
+
 # dsh-nocturne-memory
 
-给 DeepSeek Harness 接上 **Nocturne Memory** 长期记忆:boot 协议 + 记忆
-读写/搜索/更新,后端是你自己的 Nocturne MCP 服务器。
+Connects DeepSeek Harness to **Nocturne Memory**: session-start boot protocol plus memory read / search / create / update, backed by your own Nocturne MCP server.
 
-> 由 [pi-nocturne-memory](https://github.com/RealAlexandreAI/pi-nocturne-memory) 移植,
-> 协议与工具名完全一致。
+> Port of [pi-nocturne-memory](https://github.com/RealAlexandreAI/pi-nocturne-memory) — same protocol, same tool names.
 
-## 工具
+[English](README.md) · [中文](README.zh.md)
 
-| 工具 | 说明 |
+## Tools
+
+| tool | what it does |
 |---|---|
-| `nocturne_boot` | 会话开始时加载:核心记忆 + 近期上下文 + 术语表 |
-| `nocturne_read` | 按 URI 读记忆(`system://…`、`core://agent`…) |
-| `nocturne_search` | 按关键词搜记忆(可加 domain 过滤) |
-| `nocturne_create` | 新建记忆节点(支持 `[Baseline]/[Deviation]/[Result]/[Reusable judgment]`) |
-| `nocturne_update` | patch(old_string/new_string)或 append 更新记忆 |
+| `nocturne_boot` | load at session start: core memories + recent context + glossary |
+| `nocturne_read` | read a memory by URI (`system://…`, `core://agent`, …) |
+| `nocturne_search` | search memories by keywords (optional domain filter) |
+| `nocturne_create` | create a memory node (`[Baseline]/[Deviation]/[Result]/[Reusable judgment]`) |
+| `nocturne_update` | patch (old_string/new_string) or append to a memory |
 
-## 安装
+## Quick start
 
 ```sh
 dsh plugin add dsh-nocturne-memory
 ```
 
-需要你能连到自己的 Nocturne MCP 服务器(项目地址见
-[Nocturne Memory](https://github.com/martin22/Nocturne-Memory))。
-
-## 配置
+Requires your own Nocturne MCP server (see the [Nocturne Memory](https://github.com/martin22/Nocturne-Memory) project).
 
 ```yaml
 - id: memory
   name: dsh-nocturne-memory
   config:
     mcp_url: http://localhost:PORT/mcp
-    mcp_auth_ref: NOCTURNE_MCP_AUTH   # 推荐:环境变量名
-    # mcp_auth: <直接填 token>        # 备用
+    mcp_auth_ref: NOCTURNE_MCP_AUTH   # env var name — recommended
+    # mcp_auth: <direct value>
 ```
 
-| 键 | 必填 | 说明 |
+| key | required | meaning |
 |---|---|---|
-| `mcp_url` | ✅ | 你的 Nocturne MCP 服务器地址 |
-| `mcp_auth_ref` | * | MCP 认证 token 的环境变量名 |
-| `mcp_auth` | * | 直接填 token(备用) |
-| `protocol_version` | – | MCP 协议版本(默认 `2024-11-05`) |
+| `mcp_url` | ✅ | your Nocturne MCP server URL |
+| `mcp_auth_ref` | * | env-var name of the MCP auth token (via `ctx.credentials`) |
+| `mcp_auth` | * | direct token value (fallback) |
+| `protocol_version` | – | MCP protocol version (default `2024-11-05`) |
 
-\* 二者填其一。
+\* one of the two auth keys.
 
-## 隐私
+## Privacy
 
-- 记忆存在**你自己的 MCP 服务器**,本插件是薄客户端,本地不落任何内容
-- token 每次操作经 `ctx.credentials` 解析,不写日志
-- 只把你要读/写的记忆 URI、查询、内容发给你的服务器
+- Memories live on **your own MCP server**; this plugin is a thin client and stores nothing locally.
+- The auth token is resolved per operation via `ctx.credentials` — never logged.
+- Only the memory URIs/queries/content you explicitly ask about cross the wire.
 
-## 开发
+## Development
 
 ```bash
 npm install
 npm run typecheck
-npm test          # SSE 解析 / 文本提取
+npm test          # SSE parsing / text extraction
 npm run build
 ```
 
-真实 MCP 集成测试(复用你 pi 的 Nocturne 配置):
+Live MCP test (reuses your pi Nocturne config):
 
 ```bash
 node --import tsx tests/real/real-mcp.mjs

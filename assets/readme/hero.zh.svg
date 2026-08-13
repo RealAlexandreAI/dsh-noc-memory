@@ -1,0 +1,38 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 300" width="100%" role="img" aria-label="dsh-nocturne-memory —— 给 DeepSeek Harness 接上长期记忆">
+  <title>dsh-nocturne-memory —— 长期记忆</title>
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#141226"/>
+      <stop offset="1" stop-color="#1d1a38"/>
+    </linearGradient>
+    <linearGradient id="accent" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#8f7cff"/>
+      <stop offset="1" stop-color="#c3b6ff"/>
+    </linearGradient>
+  </defs>
+  <rect width="1200" height="300" rx="20" fill="url(#bg)"/>
+
+  <text x="64" y="86" font-family="-apple-system, BlinkMacSystemFont, PingFang SC, Microsoft YaHei, sans-serif" font-size="46" font-weight="700" fill="#f5f7fa">dsh-nocturne-memory</text>
+  <text x="64" y="128" font-family="-apple-system, BlinkMacSystemFont, PingFang SC, Microsoft YaHei, sans-serif" font-size="24" fill="#9aa7b8">给 agent 的长期记忆</text>
+  <rect x="64" y="150" width="200" height="6" rx="3" fill="url(#accent)"/>
+
+  <!-- moon -->
+  <circle cx="180" cy="228" r="46" fill="#e8e2ff" opacity="0.92"/>
+  <circle cx="164" cy="216" r="40" fill="#141226"/>
+  <circle cx="196" cy="244" r="9" fill="#8f7cff" opacity="0.35"/>
+  <circle cx="158" cy="250" r="5" fill="#8f7cff" opacity="0.25"/>
+
+  <!-- memory cards -->
+  <rect x="290" y="182" width="240" height="92" rx="12" fill="#1a1730" stroke="#332e55" stroke-width="2"/>
+  <text x="312" y="216" font-family="ui-monospace, SFMono-Regular, Menlo, monospace" font-size="17" fill="#c3b6ff">system://boot</text>
+  <text x="312" y="246" font-family="-apple-system, BlinkMacSystemFont, PingFang SC, Microsoft YaHei, sans-serif" font-size="16" fill="#9aa7b8">核心记忆 + 术语表</text>
+
+  <rect x="556" y="182" width="240" height="92" rx="12" fill="#1a1730" stroke="#332e55" stroke-width="2"/>
+  <text x="578" y="216" font-family="ui-monospace, SFMono-Regular, Menlo, monospace" font-size="17" fill="#c3b6ff">core://agent</text>
+  <text x="578" y="246" font-family="-apple-system, BlinkMacSystemFont, PingFang SC, Microsoft YaHei, sans-serif" font-size="16" fill="#9aa7b8">搜索 / 创建 / 更新</text>
+
+  <!-- your server note -->
+  <rect x="822" y="182" width="314" height="92" rx="12" fill="#1a1730" stroke="#332e55" stroke-width="2"/>
+  <text x="844" y="216" font-family="-apple-system, BlinkMacSystemFont, PingFang SC, Microsoft YaHei, sans-serif" font-size="20" font-weight="700" fill="#8f7cff">你自己的 MCP 服务器</text>
+  <text x="844" y="246" font-family="-apple-system, BlinkMacSystemFont, PingFang SC, Microsoft YaHei, sans-serif" font-size="16" fill="#9aa7b8">记忆不出服务器</text>
+</svg>
