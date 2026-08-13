@@ -49,7 +49,7 @@ Requires your own Nocturne MCP server (see the [Nocturne Memory](https://github.
 ## Privacy
 
 - Memories live on **your own MCP server**; this plugin is a thin client and stores nothing locally.
-- The auth token is resolved per operation via `ctx.credentials` — never logged.
+- The auth token is resolved once on first use via `ctx.credentials` (or read from `mcp_auth`) and the MCP session is reused across tool calls — no re-handshake per call, nothing logged.
 - Only the memory URIs/queries/content you explicitly ask about cross the wire.
 
 ## Development
