@@ -1,29 +1,28 @@
 // Real integration: dsh-nocturne-memory — mount into cordis and run real
-// Nocturne MCP calls (read a memory via boot URIs).
+// Nocturne MCP calls (read a memory via boot URIs). Config comes from the pi
+// extension's config file — no env vars.
 import { readFileSync } from 'node:fs'
 import { homedir } from 'node:os'
 import { join } from 'node:path'
 import { Context } from '@deepseek-ai/cordis'
-import { apply } from '../src/index.ts'
+import { apply } from '../../src/index.ts'
 
-// Load the real Nocturne config the user already has for pi.
-let mcpUrl = process.env.NOCTURNE_MCP_URL
-let mcpAuth = process.env.NOCTURNE_MCP_AUTH
+let mcpUrl = ''
+let mcpAuth = ''
 try {
   const c = JSON.parse(readFileSync(join(homedir(), '.pi', 'agent', 'extensions', 'pi-nocturne-memory', 'config.json'), 'utf8'))
-  mcpUrl = mcpUrl ?? c.mcpUrl
-  mcpAuth = mcpAuth ?? c.mcpAuth
+  mcpUrl = c.mcpUrl ?? ''
+  mcpAuth = c.mcpAuth ?? ''
 } catch {}
 
 if (!mcpUrl || !mcpAuth) {
-  console.log('SKIP: no Nocturne MCP config')
+  console.log('SKIP: no Nocturne MCP config in ~/.pi/agent/extensions/pi-nocturne-memory/config.json')
   process.exit(0)
 }
 
 const ctx = new Context()
 const registered = []
 ctx.provide('tools', { register(t) { registered.push(t) } })
-ctx.provide('credentials', { async resolve() { return { value: '', source: 'env' } } })
 ctx.provide('systemPrompt', { section() {} })
 
 apply(ctx, { mcp_url: mcpUrl, mcp_auth: mcpAuth })

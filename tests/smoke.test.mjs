@@ -12,11 +12,6 @@ function makeCtx() {
       registered.push(tool)
     },
   })
-  ctx.provide('credentials', {
-    async resolve() {
-      return { value: 'test-auth', source: 'env' }
-    },
-  })
   ctx.provide('systemPrompt', { section() {} })
   return { ctx, registered }
 }

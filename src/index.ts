@@ -8,23 +8,19 @@
 // nocturne_search, nocturne_create, nocturne_update.
 //
 // Privacy: memories live on your own MCP server; the plugin is a thin
-// client. The auth token is read via ctx.credentials from an env-var
-// reference (recommended) or a direct config value — never logged.
+// client. The auth token comes from the plugin config (mcp_auth) — never logged.
 
 import { Context } from '@deepseek-ai/cordis'
 import z from '@deepseek-ai/schemastery'
 import { defineTool } from '@deepseek-ai/dsh-tools'
-import { credentialRef, type ResolvedCredential } from '@deepseek-ai/dsh-credentials'
 
 export const name = 'nocturne-memory'
-export const inject = ['tools', 'credentials', 'systemPrompt']
+export const inject = ['tools', 'systemPrompt']
 
 export interface Config {
   /** Nocturne MCP server URL, e.g. http://localhost:PORT/mcp. */
   mcp_url: string
-  /** Env-var name of the auth token (recommended). */
-  mcp_auth_ref?: string
-  /** Direct auth token value (fallback when no ref is set). */
+  /** MCP auth token (Authorization header value, e.g. "Bearer xxx"). */
   mcp_auth?: string
   /** MCP protocol version. */
   protocol_version?: string
@@ -32,8 +28,7 @@ export interface Config {
 
 export const Config: z<Config> = z.object({
   mcp_url: z.string().required().description('Nocturne MCP server URL, e.g. http://localhost:PORT/mcp'),
-  mcp_auth_ref: z.string().description('Env-var name of the MCP auth token (recommended)'),
-  mcp_auth: z.string().description('Direct MCP auth token value (fallback when no ref is set)'),
+  mcp_auth: z.string().description('MCP auth token (Authorization header value, e.g. "Bearer xxx")'),
   protocol_version: z.string().description('MCP protocol version (default 2024-11-05)'),
 })
 
@@ -149,17 +144,11 @@ export function apply(ctx: Context, config: Config): void {
       'valuable outcomes with nocturne_create.',
   })
 
-  const resolveAuth = async (): Promise<string> => {
-    if (config.mcp_auth_ref) {
-      const resolved: ResolvedCredential = await ctx.credentials.resolve(credentialRef(config.mcp_auth_ref))
-      return resolved.value
-    }
-    return config.mcp_auth ?? ''
-  }
+  const resolveAuth = async (): Promise<string> => config.mcp_auth ?? ''
 
   // One client per plugin instance: the MCP session (initialize handshake +
   // session id) is reused across tool calls instead of re-handshaking on every
-  // call. Auth is resolved on first use; changing the ref value needs a reload.
+  // call.
   let cachedClient: Promise<NocturneClient> | null = null
   const client = (): Promise<NocturneClient> => {
     if (!cachedClient) {
