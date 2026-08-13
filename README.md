@@ -1,4 +1,4 @@
-# @alex/dsh-memory
+# @alex/dsh-nocturne-memory
 
 DeepSeek Harness plugin: **Nocturne Memory client** — automated long-term
 memory for the agent, backed by **your own**
@@ -21,7 +21,7 @@ same tools.
 ## Install
 
 ```sh
-dsh plugin add @alex/dsh-memory
+dsh plugin add @alex/dsh-nocturne-memory
 ```
 
 Requires a reachable Nocturne MCP server (your own instance — see the
@@ -31,7 +31,7 @@ Nocturne Memory project for the server).
 
 ```yaml
 - id: memory
-  name: '@alex/dsh-memory'
+  name: '@alex/dsh-nocturne-memory'
   config:
     mcp_url: http://localhost:PORT/mcp
     mcp_auth_ref: NOCTURNE_MCP_AUTH   # env var name — recommended
