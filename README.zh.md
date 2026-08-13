@@ -33,15 +33,13 @@ dsh plugin --profile web add dsh-nocturne-memory
   name: dsh-nocturne-memory
   config:
     mcp_url: http://localhost:PORT/mcp
-    mcp_auth_ref: NOCTURNE_MCP_AUTH   # 推荐:环境变量名
-    # mcp_auth: <直接填 token>
+    mcp_auth: Bearer <你的 token>
 ```
 
 | 键 | 必填 | 说明 |
 |---|---|---|
 | `mcp_url` | ✅ | 你的 Nocturne MCP 服务器地址 |
-| `mcp_auth_ref` | * | MCP 认证 token 的环境变量名 |
-| `mcp_auth` | * | 直接填 token(备用) |
+| `mcp_auth` | – | MCP 认证 token(Authorization 头,如 `Bearer xxx`) |
 | `protocol_version` | – | MCP 协议版本(默认 `2024-11-05`) |
 
 \* 两个认证键填其一。
@@ -49,7 +47,7 @@ dsh plugin --profile web add dsh-nocturne-memory
 ## 隐私
 
 - 记忆存在**你自己的 MCP 服务器**,本插件是薄客户端,本地不落任何内容
-- token 首次使用时经 `ctx.credentials` 解析(或读 `mcp_auth`),MCP 会话跨工具调用复用——不重复握手、不写日志
+- token 只存在于你的配置文件(`mcp_auth`),MCP 会话跨工具调用复用——不重复握手、不写日志
 - 只把你要读/写的记忆 URI、查询、内容发给你的服务器
 
 ## 开发

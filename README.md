@@ -33,23 +33,21 @@ Requires your own Nocturne MCP server (see the [Nocturne Memory](https://github.
   name: dsh-nocturne-memory
   config:
     mcp_url: http://localhost:PORT/mcp
-    mcp_auth_ref: NOCTURNE_MCP_AUTH   # env var name — recommended
-    # mcp_auth: <direct value>
+    mcp_auth: Bearer <your token>
 ```
 
 | key | required | meaning |
 |---|---|---|
 | `mcp_url` | ✅ | your Nocturne MCP server URL |
-| `mcp_auth_ref` | * | env-var name of the MCP auth token (via `ctx.credentials`) |
-| `mcp_auth` | * | direct token value (fallback) |
+| `mcp_auth` | – | MCP auth token (Authorization header, e.g. `Bearer xxx`) |
 | `protocol_version` | – | MCP protocol version (default `2024-11-05`) |
 
-\* one of the two auth keys.
+
 
 ## Privacy
 
 - Memories live on **your own MCP server**; this plugin is a thin client and stores nothing locally.
-- The auth token is resolved once on first use via `ctx.credentials` (or read from `mcp_auth`) and the MCP session is reused across tool calls — no re-handshake per call, nothing logged.
+- The auth token lives only in your config file (`mcp_auth`) and the MCP session is reused across tool calls — no re-handshake per call, nothing logged.
 - Only the memory URIs/queries/content you explicitly ask about cross the wire.
 
 ## Development

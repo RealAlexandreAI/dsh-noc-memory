@@ -6,7 +6,7 @@
 #     name: 'dsh-nocturne-memory'
 #     config:
 #       mcp_url: http://localhost:PORT/mcp
-#       mcp_auth_ref: NOCTURNE_MCP_AUTH   # env var name (recommended)
+#       mcp_auth: Bearer <your token>
 - insert:
     - id: nocturne-memory
       name: 'dsh-nocturne-memory'
