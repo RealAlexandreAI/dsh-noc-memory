@@ -1,4 +1,4 @@
-// @alex/dsh-memory — DeepSeek Harness (Cordis) plugin.
+// dsh-memory — DeepSeek Harness (Cordis) plugin.
 //
 // Nocturne Memory client: automated long-term memory for the agent,
 // backed by YOUR OWN Nocturne MCP server (mcp_url). Ported from

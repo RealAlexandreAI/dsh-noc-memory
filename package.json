@@ -1,5 +1,5 @@
 {
-  "name": "@alex/dsh-nocturne-memory",
+  "name": "dsh-nocturne-memory",
   "version": "0.1.0",
   "description": "DeepSeek Harness plugin: Nocturne Memory client \u2014 automated long-term memory (boot/read/search/create/update) backed by your own Nocturne MCP server.",
   "type": "module",
