@@ -42,5 +42,9 @@
     "bundle": {
       "patch": "./cordis.patch.yml"
     }
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/RealAlexandreAI/dsh-nocturne-memory"
   }
 }
