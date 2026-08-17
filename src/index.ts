@@ -67,9 +67,19 @@ export function extractText(data: any): string {
 
 const REQUEST_TIMEOUT_MS = 30_000
 
+/** MCP 2.0 (2026-07-28) is stateless: no initialize handshake, no session. */
+function isMissingSession(parsed: any): boolean {
+  const code = parsed?.error?.code
+  const message = String(parsed?.error?.message ?? '').toLowerCase()
+  return code === -32600 || message.includes('session')
+}
+
 class NocturneClient {
   private sessionId: string | null = null
   private initPromise: Promise<string | null> | null = null
+  // Probe once: MCP 2.0 servers answer without a session; legacy servers
+  // (2025-era) demand initialize + Mcp-Session-Id. Never assume which.
+  private mode: 'unknown' | 'stateless' | 'legacy' = 'unknown'
 
   constructor(
     private readonly url: string,
@@ -77,29 +87,32 @@ class NocturneClient {
     private readonly protocolVersion: string,
   ) {}
 
+  private async fetchRaw(method: string, params: Record<string, unknown>, sessionId?: string | null): Promise<Response> {
+    const headers: Record<string, string> = {
+      'Content-Type': 'application/json',
+      Accept: 'application/json, text/event-stream',
+      Authorization: this.auth,
+    }
+    if (sessionId)
+      headers['Mcp-Session-Id'] = sessionId
+
+    return fetch(this.url, {
+      method: 'POST',
+      headers,
+      body: JSON.stringify({ jsonrpc: '2.0', id: method + Date.now(), method, params }),
+      // A dead MCP server must not stall a dsh turn forever.
+      signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS),
+    })
+  }
+
   private async initialize(): Promise<string | null> {
     // Concurrent first calls share one handshake instead of racing sessions.
     if (this.initPromise) return this.initPromise
     this.initPromise = (async () => {
-      const resp = await fetch(this.url, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Accept: 'application/json, text/event-stream',
-          Authorization: this.auth,
-        },
-        body: JSON.stringify({
-          jsonrpc: '2.0',
-          id: 'init-' + Date.now(),
-          method: 'initialize',
-          params: {
-            protocolVersion: this.protocolVersion,
-            capabilities: {},
-            clientInfo: { name: 'dsh-memory', version: '0.1.0' },
-          },
-        }),
-        // A dead MCP server must not stall a dsh turn forever.
-        signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS),
+      const resp = await this.fetchRaw('initialize', {
+        protocolVersion: this.protocolVersion,
+        capabilities: {},
+        clientInfo: { name: 'dsh-memory', version: '0.1.0' },
       })
       if (!resp.ok) return null
       return resp.headers.get('mcp-session-id')
@@ -108,21 +121,28 @@ class NocturneClient {
   }
 
   async call(method: string, params: Record<string, unknown>): Promise<any> {
+    // MCP 2.0 stateless path: try without a session first (no initialize).
+    if (this.mode !== 'legacy') {
+      const resp = await this.fetchRaw(method, params)
+      if (resp.ok) {
+        const parsed = parseStreamResponse(await resp.text())
+        if (!isMissingSession(parsed)) {
+          this.mode = 'stateless'
+          const newSid = resp.headers.get('mcp-session-id')
+          if (newSid)
+            this.sessionId = newSid
+          return parsed
+        }
+        // Legacy server demands a session — fall through to handshake.
+      }
+    }
+
+    this.mode = 'legacy'
     if (!this.sessionId) {
       this.sessionId = await this.initialize()
       if (!this.sessionId) return { error: { code: -1, message: 'Failed to initialize MCP session' } }
     }
-    const resp = await fetch(this.url, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        Accept: 'application/json, text/event-stream',
-        Authorization: this.auth,
-        'Mcp-Session-Id': this.sessionId,
-      },
-      body: JSON.stringify({ jsonrpc: '2.0', id: method + Date.now(), method, params }),
-      signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS),
-    })
+    const resp = await this.fetchRaw(method, params, this.sessionId)
     if (!resp.ok) {
       const body = await resp.text().catch(() => '<unreadable>')
       return { error: { code: resp.status, message: `HTTP ${resp.status}: ${body.slice(0, 200)}` } }
