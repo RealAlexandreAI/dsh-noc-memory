@@ -29,4 +29,10 @@ describe('dsh-memory smoke', () => {
       'nocturne_update',
     ])
   })
+
+  it('loads with no config (mcp_url missing surfaces on tool calls, not at boot)', () => {
+    const { ctx, registered } = makeCtx()
+    applyMemory(ctx, {})
+    assert.equal(registered.length, 5)
+  })
 })
