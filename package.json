@@ -1,6 +1,6 @@
 {
   "name": "dsh-nocturne-memory",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "description": "DeepSeek Harness plugin: Nocturne Memory client \u2014 automated long-term memory (boot/read/search/create/update) backed by your own Nocturne MCP server.",
   "type": "module",
   "main": "dist/index.js",
