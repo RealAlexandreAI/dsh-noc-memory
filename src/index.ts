@@ -18,8 +18,10 @@ export const name = 'nocturne-memory'
 export const inject = ['tools', 'systemPrompt']
 
 export interface Config {
-  /** Nocturne MCP server URL, e.g. http://localhost:PORT/mcp. */
-  mcp_url: string
+  /** Nocturne MCP server URL, e.g. http://localhost:PORT/mcp. Optional at load
+   *  time — a missing server surfaces as a setup hint on tool calls so the
+   *  plugin still loads in a bare profile. */
+  mcp_url?: string
   /** MCP auth token (Authorization header value, e.g. "Bearer xxx"). */
   mcp_auth?: string
   /** MCP protocol version. */
@@ -27,7 +29,7 @@ export interface Config {
 }
 
 export const Config: z<Config> = z.object({
-  mcp_url: z.string().required().description('Nocturne MCP server URL, e.g. http://localhost:PORT/mcp'),
+  mcp_url: z.string().description('Nocturne MCP server URL, e.g. http://localhost:PORT/mcp'),
   mcp_auth: z.string().description('MCP auth token (Authorization header value, e.g. "Bearer xxx")'),
   protocol_version: z.string().description('MCP protocol version (default 2024-11-05)'),
 })
@@ -172,7 +174,12 @@ export function apply(ctx: Context, config: Config): void {
   let cachedClient: Promise<NocturneClient> | null = null
   const client = (): Promise<NocturneClient> => {
     if (!cachedClient) {
-      cachedClient = (async () => new NocturneClient(config.mcp_url, await resolveAuth(), config.protocol_version ?? '2024-11-05'))()
+      cachedClient = (async () => {
+        if (!config.mcp_url) {
+          throw new Error('Nocturne MCP server not configured — set mcp_url in the plugin config (e.g. http://localhost:PORT/mcp)')
+        }
+        return new NocturneClient(config.mcp_url, await resolveAuth(), config.protocol_version ?? '2024-11-05')
+      })()
     }
     return cachedClient
   }
