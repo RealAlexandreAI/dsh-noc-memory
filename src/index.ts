@@ -163,7 +163,13 @@ export function apply(ctx: Context, config: Config): void {
       'You have long-term memory via the Noc MCP server. At the start of ' +
       'substantial work call noc_boot to load core memories and recent ' +
       'context; use noc_search before answering from memory; persist ' +
-      'valuable outcomes with noc_create.',
+      'valuable outcomes with noc_create. ' +
+      'Periodically (after many new memories or when you repeat a mistake) ' +
+      'run a memory audit: noc_read system://diagnostic/noc, then fix what it ' +
+      'flags — never-reaccessed high-priority memories (disclosure/placement), ' +
+      'stale or cold candidates (delete if dead, demote if niche), crowded ' +
+      'parents (regroup), contradictions (merge via noc_update). Always ' +
+      'noc_read a node in full before changing it.',
   })
 
   const resolveAuth = async (): Promise<string> => config.mcp_auth ?? ''
