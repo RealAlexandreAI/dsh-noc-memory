@@ -44,7 +44,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/RealAlexandreAI/dsh-nocturne-memory"
+    "url": "https://github.com/RealAlexandreAI/dsh-noc-memory.git"
   },
   "engines": {
     "node": ">=20.0.0"

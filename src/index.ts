@@ -1,7 +1,7 @@
 // dsh-memory — DeepSeek Harness (Cordis) plugin.
 //
-// Nocturne Memory client: automated long-term memory for the agent,
-// backed by YOUR OWN Nocturne MCP server (mcp_url). Ported from
+// Noc Memory client: automated long-term memory for the agent,
+// backed by YOUR OWN Noc MCP server (mcp_url). Ported from
 // pi-noc-memory — same MCP protocol, same boot protocol, same tools.
 //
 // Tools: noc_boot (session-start memory load), noc_read,
@@ -18,7 +18,7 @@ export const name = 'noc-memory'
 export const inject = ['tools', 'systemPrompt']
 
 export interface Config {
-  /** Nocturne MCP server URL, e.g. http://localhost:PORT/mcp. Optional at load
+  /** Noc MCP server URL, e.g. http://localhost:PORT/mcp. Optional at load
    *  time — a missing server surfaces as a setup hint on tool calls so the
    *  plugin still loads in a bare profile. */
   mcp_url?: string
@@ -29,7 +29,7 @@ export interface Config {
 }
 
 export const Config: z<Config> = z.object({
-  mcp_url: z.string().description('Nocturne MCP server URL, e.g. http://localhost:PORT/mcp'),
+  mcp_url: z.string().description('Noc MCP server URL, e.g. http://localhost:PORT/mcp'),
   mcp_auth: z.string().description('MCP auth token (Authorization header value, e.g. "Bearer xxx")'),
   protocol_version: z.string().description('MCP protocol version (default 2024-11-05)'),
 })
@@ -76,7 +76,7 @@ function isMissingSession(parsed: any): boolean {
   return code === -32600 || message.includes('session')
 }
 
-class NocturneClient {
+class NocClient {
   private sessionId: string | null = null
   private initPromise: Promise<string | null> | null = null
   // Probe once: MCP 2.0 servers answer without a session; legacy servers
@@ -160,7 +160,7 @@ export function apply(ctx: Context, config: Config): void {
     name: 'tool:noc-memory',
     order: 114,
     text:
-      'You have long-term memory via the Nocturne MCP server. At the start of ' +
+      'You have long-term memory via the Noc MCP server. At the start of ' +
       'substantial work call noc_boot to load core memories and recent ' +
       'context; use noc_search before answering from memory; persist ' +
       'valuable outcomes with noc_create.',
@@ -171,14 +171,14 @@ export function apply(ctx: Context, config: Config): void {
   // One client per plugin instance: the MCP session (initialize handshake +
   // session id) is reused across tool calls instead of re-handshaking on every
   // call.
-  let cachedClient: Promise<NocturneClient> | null = null
-  const client = (): Promise<NocturneClient> => {
+  let cachedClient: Promise<NocClient> | null = null
+  const client = (): Promise<NocClient> => {
     if (!cachedClient) {
       cachedClient = (async () => {
         if (!config.mcp_url) {
-          throw new Error('Nocturne MCP server not configured — set mcp_url in the plugin config (e.g. http://localhost:PORT/mcp)')
+          throw new Error('Noc MCP server not configured — set mcp_url in the plugin config (e.g. http://localhost:PORT/mcp)')
         }
-        return new NocturneClient(config.mcp_url, await resolveAuth(), config.protocol_version ?? '2024-11-05')
+        return new NocClient(config.mcp_url, await resolveAuth(), config.protocol_version ?? '2024-11-05')
       })()
     }
     return cachedClient
