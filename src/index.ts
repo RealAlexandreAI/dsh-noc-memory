@@ -2,10 +2,10 @@
 //
 // Nocturne Memory client: automated long-term memory for the agent,
 // backed by YOUR OWN Nocturne MCP server (mcp_url). Ported from
-// pi-nocturne-memory — same MCP protocol, same boot protocol, same tools.
+// pi-noc-memory — same MCP protocol, same boot protocol, same tools.
 //
-// Tools: nocturne_boot (session-start memory load), nocturne_read,
-// nocturne_search, nocturne_create, nocturne_update.
+// Tools: noc_boot (session-start memory load), noc_read,
+// noc_search, noc_create, noc_update.
 //
 // Privacy: memories live on your own MCP server; the plugin is a thin
 // client. The auth token comes from the plugin config (mcp_auth) — never logged.
@@ -14,7 +14,7 @@ import { Context } from '@deepseek-ai/cordis'
 import z from '@deepseek-ai/schemastery'
 import { defineTool } from '@deepseek-ai/dsh-tools'
 
-export const name = 'nocturne-memory'
+export const name = 'noc-memory'
 export const inject = ['tools', 'systemPrompt']
 
 export interface Config {
@@ -157,13 +157,13 @@ class NocturneClient {
 
 export function apply(ctx: Context, config: Config): void {
   ctx.systemPrompt.section({
-    name: 'tool:nocturne-memory',
+    name: 'tool:noc-memory',
     order: 114,
     text:
       'You have long-term memory via the Nocturne MCP server. At the start of ' +
-      'substantial work call nocturne_boot to load core memories and recent ' +
-      'context; use nocturne_search before answering from memory; persist ' +
-      'valuable outcomes with nocturne_create.',
+      'substantial work call noc_boot to load core memories and recent ' +
+      'context; use noc_search before answering from memory; persist ' +
+      'valuable outcomes with noc_create.',
   })
 
   const resolveAuth = async (): Promise<string> => config.mcp_auth ?? ''
@@ -189,7 +189,7 @@ export function apply(ctx: Context, config: Config): void {
   }
 
   register({
-    name: 'nocturne_boot',
+    name: 'noc_boot',
     description:
       'Call at session start. Loads core memories, recent context, and glossary. ' +
       'Self-discipline startup protocol.',
@@ -208,7 +208,7 @@ export function apply(ctx: Context, config: Config): void {
   })
 
   register({
-    name: 'nocturne_read',
+    name: 'noc_read',
     description: 'Read a memory by URI. Use system:// URIs or memory paths like core://agent.',
     parameters: {
       uri: { type: 'string', required: true, description: 'Memory URI (e.g., core://agent, system://boot)' },
@@ -223,7 +223,7 @@ export function apply(ctx: Context, config: Config): void {
   })
 
   register({
-    name: 'nocturne_search',
+    name: 'noc_search',
     description: 'Search memories by keywords in path and content.',
     parameters: {
       query: { type: 'string', required: true, description: 'Search keywords' },
@@ -242,7 +242,7 @@ export function apply(ctx: Context, config: Config): void {
   })
 
   register({
-    name: 'nocturne_create',
+    name: 'noc_create',
     description:
       'Create a new memory node. Include [Baseline], [Deviation], [Result], [Reusable judgment] for behavior records.',
     parameters: {
@@ -271,7 +271,7 @@ export function apply(ctx: Context, config: Config): void {
   })
 
   register({
-    name: 'nocturne_update',
+    name: 'noc_update',
     description: 'Update existing memory. Use patch mode (old_string/new_string) or append mode.',
     parameters: {
       uri: { type: 'string', required: true, description: 'Memory URI to update' },

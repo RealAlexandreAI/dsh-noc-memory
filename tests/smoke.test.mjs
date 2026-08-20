@@ -17,16 +17,16 @@ function makeCtx() {
 }
 
 describe('dsh-memory smoke', () => {
-  it('registers the 5 nocturne tools', () => {
+  it('registers the 5 noc tools', () => {
     const { ctx, registered } = makeCtx()
     applyMemory(ctx, { mcp_url: 'http://localhost:9999/mcp', mcp_auth: 'x' })
     const names = registered.map((t) => t.name).sort()
     assert.deepEqual(names, [
-      'nocturne_boot',
-      'nocturne_create',
-      'nocturne_read',
-      'nocturne_search',
-      'nocturne_update',
+      'noc_boot',
+      'noc_create',
+      'noc_read',
+      'noc_search',
+      'noc_update',
     ])
   })
 

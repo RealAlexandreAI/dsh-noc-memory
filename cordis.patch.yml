@@ -1,12 +1,12 @@
-# Plugin bundle for dsh-nocturne-memory.
-# Registers the Nocturne Memory tools (nocturne_boot / read / search /
+# Plugin bundle for dsh-noc-memory.
+# Registers the Noc Memory tools (noc_boot / read / search /
 # create / update). Configure your own Nocturne MCP server:
 #
-#   - id: nocturne-memory
-#     name: 'dsh-nocturne-memory'
+#   - id: noc-memory
+#     name: 'dsh-noc-memory'
 #     config:
 #       mcp_url: http://localhost:PORT/mcp
 #       mcp_auth: Bearer <your token>
 - insert:
-    - id: nocturne-memory
-      name: 'dsh-nocturne-memory'
+    - id: noc-memory
+      name: 'dsh-noc-memory'
