@@ -162,7 +162,8 @@ export function apply(ctx: Context, config: Config): void {
     text:
       'You have long-term memory via the Noc MCP server. At the start of ' +
       'substantial work call noc_boot to load core memories and recent ' +
-      'context; use noc_search before answering from memory; persist ' +
+      'context; then read system://focus to resume active working trees; ' +
+      'use noc_search before answering from memory; persist ' +
       'valuable outcomes with noc_create. ' +
       'Periodically (after many new memories or when you repeat a mistake) ' +
       'run a memory audit: noc_read system://diagnostic/noc, then fix what it ' +
