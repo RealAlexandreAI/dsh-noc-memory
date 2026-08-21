@@ -163,7 +163,9 @@ export function apply(ctx: Context, config: Config): void {
       'You have long-term memory via the Noc MCP server. At the start of ' +
       'substantial work call noc_boot to load core memories and recent ' +
       'context; then read system://focus to resume active working trees; ' +
-      'use noc_search before answering from memory; persist ' +
+      'use noc_search before answering from memory — describe what you need ' +
+      'in natural language, not just keywords (semantic recall finds memories ' +
+      'with no shared words); persist ' +
       'valuable outcomes with noc_create. ' +
       'Periodically (after many new memories or when you repeat a mistake) ' +
       'run a memory audit: noc_read system://diagnostic/noc, then fix what it ' +
@@ -231,9 +233,12 @@ export function apply(ctx: Context, config: Config): void {
 
   register({
     name: 'noc_search',
-    description: 'Search memories by keywords in path and content.',
+    description:
+      'Search memories with semantic + keyword recall (multilingual, CJK-capable). ' +
+      'Describe what you are looking for in natural language — semantic search finds ' +
+      'memories that share no keywords (e.g. query "部署失败" recalls a note about a broken release pipeline).',
     parameters: {
-      query: { type: 'string', required: true, description: 'Search keywords' },
+      query: { type: 'string', required: true, description: 'Concept or keywords to search for' },
       domain: { type: 'string', description: 'Domain filter (e.g., core, writer)' },
     },
     output: { schema: { type: 'string' }, render: (_a, v) => [{ type: 'text', text: String(v) }] },
