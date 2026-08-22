@@ -37,10 +37,23 @@ Requires your own Noc Memory server — deploy it to Cloudflare in minutes: [cf-
     mcp_auth: Bearer <your token>
 ```
 
+For a server behind Cloudflare Access (e.g. noc-mem.slahser.com), use the **service token** headers instead of `mcp_auth`:
+
+```yaml
+- id: noc-memory
+  name: dsh-noc-memory
+  config:
+    mcp_url: https://noc-mem.slahser.com/mcp
+    mcp_headers:
+      CF-Access-Client-Id: <your client id>
+      CF-Access-Client-Secret: <your client secret>
+```
+
 | key | required | meaning |
 |---|---|---|
 | `mcp_url` | yes | your Noc Memory MCP endpoint (Streamable HTTP) |
 | `mcp_auth` | no | `Bearer <token>` if the server requires it |
+| `mcp_headers` | no | extra headers merged into every MCP request (e.g. Cloudflare Access service token) |
 
 > **Upgrading from dsh-nocturne-memory (≤0.1.x):** renamed to `dsh-noc-memory`, tools renamed `nocturne_*` → `noc_*`. Remove the old plugin and re-add the new package; update any prompt text referencing `nocturne_*` tools.
 

@@ -24,6 +24,9 @@ export interface Config {
   mcp_url?: string
   /** MCP auth token (Authorization header value, e.g. "Bearer xxx"). */
   mcp_auth?: string
+  /** Extra headers merged into every MCP request — e.g. a Cloudflare Access
+   *  service token ("CF-Access-Client-Id" / "CF-Access-Client-Secret"). */
+  mcp_headers?: Record<string, string>
   /** MCP protocol version. */
   protocol_version?: string
 }
@@ -31,6 +34,7 @@ export interface Config {
 export const Config: z<Config> = z.object({
   mcp_url: z.string().description('Noc MCP server URL, e.g. http://localhost:PORT/mcp'),
   mcp_auth: z.string().description('MCP auth token (Authorization header value, e.g. "Bearer xxx")'),
+  mcp_headers: z.dict(z.string()).description('Extra headers merged into every MCP request (e.g. Cloudflare Access service token)'),
   protocol_version: z.string().description('MCP protocol version (default 2024-11-05)'),
 })
 
@@ -87,6 +91,7 @@ class NocClient {
     private readonly url: string,
     private readonly auth: string,
     private readonly protocolVersion: string,
+    private readonly extraHeaders: Record<string, string> = {},
   ) {}
 
   private async fetchRaw(method: string, params: Record<string, unknown>, sessionId?: string | null): Promise<Response> {
@@ -94,6 +99,7 @@ class NocClient {
       'Content-Type': 'application/json',
       Accept: 'application/json, text/event-stream',
       Authorization: this.auth,
+      ...this.extraHeaders,
     }
     if (sessionId)
       headers['Mcp-Session-Id'] = sessionId
@@ -187,7 +193,7 @@ export function apply(ctx: Context, config: Config): void {
         if (!config.mcp_url) {
           throw new Error('Noc MCP server not configured — set mcp_url in the plugin config (e.g. http://localhost:PORT/mcp)')
         }
-        return new NocClient(config.mcp_url, await resolveAuth(), config.protocol_version ?? '2024-11-05')
+        return new NocClient(config.mcp_url, await resolveAuth(), config.protocol_version ?? '2024-11-05', config.mcp_headers ?? {})
       })()
     }
     return cachedClient
