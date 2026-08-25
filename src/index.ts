@@ -73,6 +73,28 @@ export function extractText(data: any): string {
 
 const REQUEST_TIMEOUT_MS = 30_000
 
+// UI presentation helpers — dsh web UI renders pending/settled tool calls as
+// cards; declaring them gives memory ops readable titles instead of raw args.
+function presentCallFor(label: string, pick: (args: any) => string): (args: any) => unknown {
+  return (args) => {
+    const what = String(pick(args) ?? '').trim()
+    return { card: 'generic', title: what ? `${label} ${what}` : label, rawInput: what || undefined }
+  }
+}
+
+function presentResultFor(label: string): (
+  args: any,
+  result: { content: Array<{ type?: string; text?: string }>; isError: boolean },
+) => unknown {
+  return (_args, result) => {
+    const text = result.content.map((b) => (b.type === 'text' && b.text) || '').join('').trim()
+    if (result.isError) {
+      return { card: 'generic', title: `${label} failed`, content: [{ type: 'text', text: text || 'unknown error' }] }
+    }
+    return { card: 'generic', title: `${label} ok`, content: text ? [{ type: 'text', text }] : undefined }
+  }
+}
+
 /** MCP 2.0 (2026-07-28) is stateless: no initialize handshake, no session. */
 function isMissingSession(parsed: any): boolean {
   const code = parsed?.error?.code
@@ -209,8 +231,14 @@ export function apply(ctx: Context, config: Config): void {
       'Call at session start. Loads core memories, recent context, and glossary. ' +
       'Self-discipline startup protocol.',
     parameters: {},
-    output: { schema: { type: 'string' }, render: (_a, v) => [{ type: 'text', text: String(v) }] },
+    output: {
+      schema: { type: 'string' },
+      render: (_a, v) => [{ type: 'text', text: String(v) }],
+      presentationMeta: () => ({ action: 'boot' }),
+    },
     isConcurrencySafe: () => true,
+    presentCall: presentCallFor('noc_boot', () => 'load core + recent + glossary'),
+    presentResult: presentResultFor('noc_boot'),
     async execute(_args, _exec) {
       const c = await client()
       const out: string[] = []
@@ -228,8 +256,14 @@ export function apply(ctx: Context, config: Config): void {
     parameters: {
       uri: { type: 'string', required: true, description: 'Memory URI (e.g., core://agent, system://boot)' },
     },
-    output: { schema: { type: 'string' }, render: (_a, v) => [{ type: 'text', text: String(v) }] },
+    output: {
+      schema: { type: 'string' },
+      render: (_a, v) => [{ type: 'text', text: String(v) }],
+      presentationMeta: (args: any) => ({ action: 'read', uri: args.uri ?? '' }),
+    },
     isConcurrencySafe: () => true,
+    presentCall: presentCallFor('noc_read', (args) => args.uri),
+    presentResult: presentResultFor('noc_read'),
     async execute(args, _exec) {
       const c = await client()
       const data = await c.call('tools/call', { name: 'read_memory', arguments: { uri: args.uri } })
@@ -247,8 +281,14 @@ export function apply(ctx: Context, config: Config): void {
       query: { type: 'string', required: true, description: 'Concept or keywords to search for' },
       domain: { type: 'string', description: 'Domain filter (e.g., core, writer)' },
     },
-    output: { schema: { type: 'string' }, render: (_a, v) => [{ type: 'text', text: String(v) }] },
+    output: {
+      schema: { type: 'string' },
+      render: (_a, v) => [{ type: 'text', text: String(v) }],
+      presentationMeta: (args: any) => ({ action: 'search', query: args.query ?? '' }),
+    },
     isConcurrencySafe: () => true,
+    presentCall: presentCallFor('noc_search', (args) => args.query),
+    presentResult: presentResultFor('noc_search'),
     async execute(args, _exec) {
       const c = await client()
       const data = await c.call('tools/call', {
@@ -270,8 +310,14 @@ export function apply(ctx: Context, config: Config): void {
       disclosure: { type: 'string', required: true, description: "When to recall this memory (e.g., 'When discussing X')" },
       title: { type: 'string', description: 'Path name (a-z, 0-9, _, -)' },
     },
-    output: { schema: { type: 'string' }, render: (_a, v) => [{ type: 'text', text: String(v) }] },
+    output: {
+      schema: { type: 'string' },
+      render: (_a, v) => [{ type: 'text', text: String(v) }],
+      presentationMeta: (args: any) => ({ action: 'create', parent_uri: args.parent_uri ?? '', title: args.title ?? '' }),
+    },
     isConcurrencySafe: () => true,
+    presentCall: presentCallFor('noc_create', (args) => args.title ?? args.parent_uri),
+    presentResult: presentResultFor('noc_create'),
     async execute(args, _exec) {
       const c = await client()
       const data = await c.call('tools/call', {
@@ -297,8 +343,14 @@ export function apply(ctx: Context, config: Config): void {
       old_string: { type: 'string', description: 'Patch: text to replace' },
       new_string: { type: 'string', description: 'Patch/append: replacement or appended text' },
     },
-    output: { schema: { type: 'string' }, render: (_a, v) => [{ type: 'text', text: String(v) }] },
+    output: {
+      schema: { type: 'string' },
+      render: (_a, v) => [{ type: 'text', text: String(v) }],
+      presentationMeta: (args: any) => ({ action: 'update', uri: args.uri ?? '', mode: args.mode ?? 'patch' }),
+    },
     isConcurrencySafe: () => true,
+    presentCall: presentCallFor('noc_update', (args) => args.uri),
+    presentResult: presentResultFor('noc_update'),
     async execute(args, _exec) {
       const c = await client()
       const data = await c.call('tools/call', {
