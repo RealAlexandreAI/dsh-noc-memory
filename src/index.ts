@@ -186,7 +186,7 @@ class NocClient {
 export function apply(ctx: Context, config: Config): void {
   ctx.systemPrompt.section({
     name: 'tool:noc-memory',
-    order: 114,
+    order: 2960,
     text:
       'You have long-term memory via the Noc MCP server. At the start of ' +
       'substantial work call noc_boot to load core memories and recent ' +
