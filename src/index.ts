@@ -203,7 +203,7 @@ export function apply(ctx: Context, config: Config): void {
     text:
       'You have long-term memory via the Noc MCP server. At the start of ' +
       'substantial work call noc_boot to load core memories, recent context, ' +
-      'and today\'s briefing (triggers live on nodes, not a glossary URI); then ' +
+      'and today\'s briefing (triggers live on nodes); then ' +
       'read system://focus to resume active working trees; use noc_search before ' +
       'answering from memory — describe what you need in natural language, not ' +
       'just keywords (semantic recall finds memories with no shared words); ' +
