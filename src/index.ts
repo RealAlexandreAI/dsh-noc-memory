@@ -73,8 +73,8 @@ export function extractText(data: any): string {
 
 const REQUEST_TIMEOUT_MS = 30_000
 
-/** Boot resources read via read_memory (boot + recent; triggers live on nodes, not boot). */
-export const BOOT_URIS = ['system://boot', 'system://recent/5'] as const
+/** Boot resources read via read_memory (boot + recent + triggers). */
+export const BOOT_URIS = ['system://boot', 'system://recent/5', 'system://triggers'] as const
 
 /** MCP tool names as exposed by cf-noc-mem (must stay in sync with the server). */
 export const MCP_TOOLS = {
@@ -203,7 +203,7 @@ export function apply(ctx: Context, config: Config): void {
     text:
       'You have long-term memory via the Noc MCP server. At the start of ' +
       'substantial work call noc_boot to load core memories, recent context, ' +
-      'and today\'s briefing (triggers live on nodes); then ' +
+      'triggers (system://triggers), and today\'s briefing; then ' +
       'read system://focus to resume active working trees; use noc_search before ' +
       'answering from memory — describe what you need in natural language, not ' +
       'just keywords (semantic recall finds memories with no shared words); ' +
@@ -242,8 +242,8 @@ export function apply(ctx: Context, config: Config): void {
   register({
     name: 'noc_boot',
     description:
-      'Call at session start. Loads core memories, recent context, and today\'s ' +
-      'working-memory briefing. Self-discipline startup protocol.',
+      'Call at session start. Loads core memories, recent context, triggers ' +
+      '(system://triggers), and today\'s working-memory briefing. Self-discipline startup protocol.',
     parameters: {},
     output: {
       schema: { type: 'string' },
@@ -251,7 +251,7 @@ export function apply(ctx: Context, config: Config): void {
       presentationMeta: () => ({ action: 'boot' }),
     },
     isConcurrencySafe: () => true,
-    presentCall: presentCallFor('noc_boot', () => 'load core + recent + briefing'),
+    presentCall: presentCallFor('noc_boot', () => 'load core + recent + triggers + briefing'),
     presentResult: presentResultFor('noc_boot'),
     async execute(_args, _exec) {
       const c = await client()

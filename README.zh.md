@@ -14,7 +14,7 @@
 
 | 工具 | 说明 |
 |---|---|
-| `noc_boot` | 会话开始加载：core + recent（`system://boot`、`system://recent/5`）+ briefing；triggers 挂在节点上 |
+| `noc_boot` | 会话开始加载：core + recent + triggers（`system://boot`、`system://recent/5`、`system://triggers`）+ briefing |
 | `noc_read` | 按 URI 读记忆(`system://…`、`noc://agent`…) |
 | `noc_search` | 搜记忆(语义 + 关键词 / 触发词召回，服务端 `search_memory`) |
 | `noc_create` | 新建记忆节点(支持 `[Baseline]`/`[Deviation]`/`[Result]`/`[Reusable judgment]`) |

@@ -49,8 +49,9 @@ describe('MCP protocol alignment', () => {
     assert.equal(MCP_TOOLS.update, 'update_memory')
   })
 
-  it('boots system://boot and system://recent/5 only — no system://glossary', () => {
-    assert.deepEqual([...BOOT_URIS], ['system://boot', 'system://recent/5'])
+  it('boots system://boot, system://recent/5, and system://triggers — no system://glossary', () => {
+    assert.deepEqual([...BOOT_URIS], ['system://boot', 'system://recent/5', 'system://triggers'])
+    assert.ok(BOOT_URIS.includes('system://triggers'))
     assert.ok(!BOOT_URIS.includes('system://glossary'))
   })
 })
