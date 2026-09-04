@@ -34,13 +34,13 @@ dsh plugin --profile web add dsh-noc-memory
   name: dsh-noc-memory
   config:
     mcp_url: https://mem.example.com/mcp
-    mcp_auth: Bearer <你的 token>
+    mcp_auth: ""  # 优先用 mcp_headers 传 Access service token
 ```
 
 | 键 | 必填 | 含义 |
 |---|---|---|
 | `mcp_url` | 是 | 你的 Noc Memory MCP 端点(Streamable HTTP) |
-| `mcp_auth` | 否 | 需要鉴权时填 `Bearer <token>` |
+| `mcp_auth` | 否 | 遗留字段；优先用 `mcp_headers` 传 Cloudflare Access service token |
 
 > **从 dsh-nocturne-memory(≤0.1.x)升级:** 已改名为 `dsh-noc-memory`,工具名 `nocturne_*` → `noc_*`。删除旧插件后重新添加新包;更新提示词里所有 `nocturne_*` 工具引用。
 
