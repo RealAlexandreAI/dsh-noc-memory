@@ -1,4 +1,4 @@
-// Cordis runtime smoke test: registers the 5 Nocturne tools.
+// Cordis runtime smoke test: registers the Nocturne tools.
 import { describe, it } from 'node:test'
 import assert from 'node:assert/strict'
 import { Context } from '@deepseek-ai/cordis'
@@ -17,13 +17,14 @@ function makeCtx() {
 }
 
 describe('dsh-memory smoke', () => {
-  it('registers the 5 noc tools', () => {
+  it('registers the 6 noc tools', () => {
     const { ctx, registered } = makeCtx()
     applyMemory(ctx, { mcp_url: 'http://localhost:9999/mcp', mcp_auth: 'x' })
     const names = registered.map((t) => t.name).sort()
     assert.deepEqual(names, [
       'noc_boot',
       'noc_create',
+      'noc_delete',
       'noc_read',
       'noc_search',
       'noc_update',
@@ -33,6 +34,6 @@ describe('dsh-memory smoke', () => {
   it('loads with no config (mcp_url missing surfaces on tool calls, not at boot)', () => {
     const { ctx, registered } = makeCtx()
     applyMemory(ctx, {})
-    assert.equal(registered.length, 5)
+    assert.equal(registered.length, 6)
   })
 })

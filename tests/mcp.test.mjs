@@ -4,7 +4,7 @@
  */
 import { describe, it } from 'node:test'
 import assert from 'node:assert/strict'
-import { extractText, parseStreamResponse } from '../src/index.ts'
+import { extractText, parseStreamResponse, MCP_TOOLS, BOOT_URIS } from '../src/index.ts'
 
 describe('parseStreamResponse', () => {
   it('parses a single SSE data block', () => {
@@ -39,5 +39,18 @@ describe('extractText', () => {
   it('returns empty for unknown shapes', () => {
     assert.equal(extractText(null), '')
     assert.equal(extractText({}), '')
+  })
+})
+
+describe('MCP protocol alignment', () => {
+  it('calls search_memory (not search_memories)', () => {
+    assert.equal(MCP_TOOLS.search, 'search_memory')
+    assert.equal(MCP_TOOLS.delete, 'delete_memory')
+    assert.equal(MCP_TOOLS.update, 'update_memory')
+  })
+
+  it('BOOT_URIS excludes system://glossary', () => {
+    assert.deepEqual([...BOOT_URIS], ['system://boot', 'system://recent/5'])
+    assert.ok(!BOOT_URIS.includes('system://glossary'))
   })
 })

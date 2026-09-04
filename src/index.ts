@@ -5,7 +5,7 @@
 // pi-noc-memory — same MCP protocol, same boot protocol, same tools.
 //
 // Tools: noc_boot (session-start memory load), noc_read,
-// noc_search, noc_create, noc_update.
+// noc_search, noc_create, noc_update, noc_delete.
 //
 // Privacy: memories live on your own MCP server; the plugin is a thin
 // client. The auth token comes from the plugin config (mcp_auth) — never logged.
@@ -72,6 +72,19 @@ export function extractText(data: any): string {
 }
 
 const REQUEST_TIMEOUT_MS = 30_000
+
+/** Boot resources read via read_memory at session start (not MCP resources/read). */
+export const BOOT_URIS = ['system://boot', 'system://recent/5'] as const
+
+/** MCP tool names as exposed by cf-noc-mem (must stay in sync with the server). */
+export const MCP_TOOLS = {
+  read: 'read_memory',
+  search: 'search_memory', // not search_memories
+  create: 'create_memory',
+  update: 'update_memory',
+  delete: 'delete_memory',
+} as const
+
 
 // UI presentation helpers — dsh web UI renders pending/settled tool calls as
 // cards; declaring them gives memory ops readable titles instead of raw args.
@@ -189,16 +202,16 @@ export function apply(ctx: Context, config: Config): void {
     order: 2960,
     text:
       'You have long-term memory via the Noc MCP server. At the start of ' +
-      'substantial work call noc_boot to load core memories and recent ' +
-      'context; then read system://focus to resume active working trees; ' +
-      'use noc_search before answering from memory — describe what you need ' +
-      'in natural language, not just keywords (semantic recall finds memories ' +
-      'with no shared words); persist ' +
-      'valuable outcomes with noc_create. ' +
+      'substantial work call noc_boot to load core memories, recent context, ' +
+      'and recent context; then read system://focus ' +
+      'to resume active working trees; use noc_search before answering from memory ' +
+      '— describe what you need in natural language, not just keywords (semantic ' +
+      'recall finds memories with no shared words); persist valuable outcomes with ' +
+      'noc_create; revise with noc_update; remove dead nodes with noc_delete. ' +
       'Periodically (after many new memories or when you repeat a mistake) ' +
       'run a memory audit: noc_read system://diagnostic/noc, then fix what it ' +
       'flags — never-reaccessed high-priority memories (disclosure/placement), ' +
-      'stale or cold candidates (delete if dead, demote if niche), crowded ' +
+      'stale or cold candidates (noc_delete if dead, demote if niche), crowded ' +
       'parents (regroup), contradictions (merge via noc_update). Always ' +
       'noc_read a node in full before changing it.',
   })
@@ -228,8 +241,8 @@ export function apply(ctx: Context, config: Config): void {
   register({
     name: 'noc_boot',
     description:
-      'Call at session start. Loads core memories, recent context, and glossary. ' +
-      'Self-discipline startup protocol.',
+      'Call at session start. Loads core memories, recent context, and today\'s ' +
+      'working-memory briefing. Self-discipline startup protocol.',
     parameters: {},
     output: {
       schema: { type: 'string' },
@@ -237,14 +250,26 @@ export function apply(ctx: Context, config: Config): void {
       presentationMeta: () => ({ action: 'boot' }),
     },
     isConcurrencySafe: () => true,
-    presentCall: presentCallFor('noc_boot', () => 'load core + recent + glossary'),
+    presentCall: presentCallFor('noc_boot', () => 'load core + recent'),
     presentResult: presentResultFor('noc_boot'),
     async execute(_args, _exec) {
       const c = await client()
       const out: string[] = []
-      for (const uri of ['system://boot', 'system://recent/5', 'system://glossary']) {
-        const data = await c.call('tools/call', { name: 'read_memory', arguments: { uri } })
-        out.push(`[${uri}]\n${extractText(data)}`)
+      for (const uri of BOOT_URIS) {
+        const data = await c.call('tools/call', { name: MCP_TOOLS.read, arguments: { uri } })
+        const text = extractText(data)
+        if (!text) continue
+        out.push(`[${uri}]\n${text}`)
+      }
+      // Daily briefing: best-effort — boot still succeeds if server lacks it.
+      try {
+        const data = await c.call('tools/call', { name: MCP_TOOLS.read, arguments: { uri: 'system://briefing' } })
+        const text = extractText(data)
+        if (text && !/^Unknown system URI/i.test(text.trim()) && !text.startsWith('Error:')) {
+          out.push(`[system://briefing]\n${text}`)
+        }
+      } catch {
+        // ignore
       }
       return out.join('\n\n')
     },
@@ -266,7 +291,7 @@ export function apply(ctx: Context, config: Config): void {
     presentResult: presentResultFor('noc_read'),
     async execute(args, _exec) {
       const c = await client()
-      const data = await c.call('tools/call', { name: 'read_memory', arguments: { uri: args.uri } })
+      const data = await c.call('tools/call', { name: MCP_TOOLS.read, arguments: { uri: args.uri } })
       return extractText(data)
     },
   })
@@ -279,7 +304,8 @@ export function apply(ctx: Context, config: Config): void {
       'memories that share no keywords (e.g. query "部署失败" recalls a note about a broken release pipeline).',
     parameters: {
       query: { type: 'string', required: true, description: 'Concept or keywords to search for' },
-      domain: { type: 'string', description: 'Domain filter (e.g., core, writer)' },
+      limit: { type: 'number', description: 'Max results (1-50, default 20)' },
+      domain: { type: 'string', description: 'Domain filter (e.g., core, writer); ignored by current cf-noc-mem' },
     },
     output: {
       schema: { type: 'string' },
@@ -291,9 +317,12 @@ export function apply(ctx: Context, config: Config): void {
     presentResult: presentResultFor('noc_search'),
     async execute(args, _exec) {
       const c = await client()
+      const arguments_: Record<string, unknown> = { query: args.query }
+      if (args.limit !== undefined) arguments_.limit = args.limit
+      if (args.domain) arguments_.domain = args.domain
       const data = await c.call('tools/call', {
-        name: 'search_memories',
-        arguments: { query: args.query, domain: args.domain ?? undefined },
+        name: MCP_TOOLS.search,
+        arguments: arguments_,
       })
       return extractText(data)
     },
@@ -321,7 +350,7 @@ export function apply(ctx: Context, config: Config): void {
     async execute(args, _exec) {
       const c = await client()
       const data = await c.call('tools/call', {
-        name: 'create_memory',
+        name: MCP_TOOLS.create,
         arguments: {
           parent_uri: args.parent_uri,
           content: args.content,
@@ -336,31 +365,72 @@ export function apply(ctx: Context, config: Config): void {
 
   register({
     name: 'noc_update',
-    description: 'Update existing memory. Use patch mode (old_string/new_string) or append mode.',
+    description:
+      'Update existing memory. Supports full content replace, old_string/new_string patch, or append. ' +
+      'Must noc_read the URI first. Optional relation marks knowledge evolution: replace|enrich|confirm|challenge.',
     parameters: {
       uri: { type: 'string', required: true, description: 'Memory URI to update' },
-      mode: { type: 'string', enum: ['patch', 'append'], description: 'Update mode' },
-      old_string: { type: 'string', description: 'Patch: text to replace' },
-      new_string: { type: 'string', description: 'Patch/append: replacement or appended text' },
+      content: { type: 'string', description: 'Full replacement content' },
+      old_string: { type: 'string', description: 'Exact text to replace (patch)' },
+      new_string: { type: 'string', description: 'Replacement text (patch)' },
+      append: { type: 'string', description: 'Text to append' },
+      priority: { type: 'number', description: 'New priority (lower = more important)' },
+      disclosure: { type: 'string', description: 'New disclosure condition' },
+      expires_at: { type: 'string', description: 'ISO datetime to expire, or "" to clear' },
+      relation: {
+        type: 'string',
+        enum: ['replace', 'enrich', 'confirm', 'challenge'],
+        description: 'Knowledge-evolution relation to previous version',
+      },
     },
     output: {
       schema: { type: 'string' },
       render: (_a, v) => [{ type: 'text', text: String(v) }],
-      presentationMeta: (args: any) => ({ action: 'update', uri: args.uri ?? '', mode: args.mode ?? 'patch' }),
+      presentationMeta: (args: any) => ({ action: 'update', uri: args.uri ?? '' }),
     },
     isConcurrencySafe: () => true,
     presentCall: presentCallFor('noc_update', (args) => args.uri),
     presentResult: presentResultFor('noc_update'),
     async execute(args, _exec) {
       const c = await client()
+      const arguments_: Record<string, unknown> = { uri: args.uri }
+      if (args.content !== undefined) arguments_.content = args.content
+      if (args.old_string) arguments_.old_string = args.old_string
+      if (args.new_string !== undefined) arguments_.new_string = args.new_string
+      if (args.append) arguments_.append = args.append
+      if (args.priority !== undefined) arguments_.priority = args.priority
+      if (args.disclosure) arguments_.disclosure = args.disclosure
+      if (args.expires_at !== undefined) arguments_.expires_at = args.expires_at
+      if (args.relation) arguments_.relation = args.relation
       const data = await c.call('tools/call', {
-        name: 'update_memory',
-        arguments: {
-          uri: args.uri,
-          mode: args.mode ?? 'patch',
-          old_string: args.old_string ?? undefined,
-          new_string: args.new_string ?? undefined,
-        },
+        name: MCP_TOOLS.update,
+        arguments: arguments_,
+      })
+      return extractText(data)
+    },
+  })
+
+  register({
+    name: 'noc_delete',
+    description:
+      'Delete a memory by URI (cuts its path). Always noc_read the full node first. ' +
+      'If the node has children, the server may return orphans to handle first.',
+    parameters: {
+      uri: { type: 'string', required: true, description: 'Memory URI to delete' },
+    },
+    output: {
+      schema: { type: 'string' },
+      render: (_a, v) => [{ type: 'text', text: String(v) }],
+      presentationMeta: (args: any) => ({ action: 'delete', uri: args.uri ?? '' }),
+    },
+    isConcurrencySafe: () => true,
+    presentCall: presentCallFor('noc_delete', (args) => args.uri),
+    presentResult: presentResultFor('noc_delete'),
+    async execute(args, _exec) {
+      const c = await client()
+      const data = await c.call('tools/call', {
+        name: MCP_TOOLS.delete,
+        arguments: { uri: args.uri },
       })
       return extractText(data)
     },

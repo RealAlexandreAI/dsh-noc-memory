@@ -4,7 +4,7 @@
 
 # dsh-noc-memory
 
-给 DeepSeek Harness 接上 **Noc Memory** 长期记忆:会话开始 boot + 每日简报,记忆读写/搜索/更新,后端是部署在 Cloudflare 上的 Noc Memory MCP 服务器。
+给 DeepSeek Harness 接上 **Noc Memory** 长期记忆:会话开始 boot + 每日简报,记忆读写/搜索/更新/删除,后端是部署在 Cloudflare 上的 Noc Memory MCP 服务器。
 
 > 由 [pi-noc-memory](https://github.com/RealAlexandreAI/pi-noc-memory) 移植,协议与工具名完全一致。
 
@@ -14,12 +14,12 @@
 
 | 工具 | 说明 |
 |---|---|
-| `noc_boot` | 会话开始时加载:核心记忆 + 近期上下文 + 术语表 |
-| `noc_briefing` | 今日工作记忆简报(`system://briefing`)——近期活动、即将过期、冷候选 |
+| `noc_boot` | 会话开始时加载:核心记忆 + 近期上下文(有则含 briefing) |
 | `noc_read` | 按 URI 读记忆(`system://…`、`noc://agent`…) |
-| `noc_search` | 按关键词搜记忆(触发词召回优先,再 FTS) |
-| `noc_create` | 新建记忆节点(支持 `[Baseline]/[Deviation]/[Result]/[Reusable judgment]`) |
-| `noc_update` | patch(old_string/new_string)或 append 更新记忆;可选 `relation` 演变标记 |
+| `noc_search` | 搜记忆(语义 + 关键词 / 触发词召回，服务端 `search_memory`) |
+| `noc_create` | 新建记忆节点(支持 `[Baseline]`/`[Deviation]`/`[Result]`/`[Reusable judgment]`) |
+| `noc_update` | 全文替换、patch(old_string/new_string)或 append;可选 `relation` |
+| `noc_delete` | 按 URI 删除记忆(`delete_memory`) |
 
 ## 快速开始
 

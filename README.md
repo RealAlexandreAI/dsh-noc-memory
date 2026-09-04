@@ -4,7 +4,7 @@
 
 # dsh-noc-memory
 
-Connects DeepSeek Harness to **Noc Memory**: session-start boot + daily briefing, plus memory read / search / create / update, backed by your own Noc Memory MCP server on Cloudflare.
+Connects DeepSeek Harness to **Noc Memory**: session-start boot + daily briefing, plus memory read / search / create / update / delete, backed by your own Noc Memory MCP server on Cloudflare.
 
 > Port of [pi-noc-memory](https://github.com/RealAlexandreAI/pi-noc-memory) — same protocol, same tool names.
 
@@ -14,12 +14,12 @@ Connects DeepSeek Harness to **Noc Memory**: session-start boot + daily briefing
 
 | tool | what it does |
 |---|---|
-| `noc_boot` | load at session start: core memories + recent context + glossary |
-| `noc_briefing` | today's working-memory briefing (`system://briefing`) — recent activity, expiring, cold candidates |
+| `noc_boot` | load at session start: core memories + recent context (+ briefing when available) |
 | `noc_read` | read a memory by URI (`system://…`, `noc://agent`, …) |
-| `noc_search` | search memories by keywords (trigger recall first, then FTS) |
-| `noc_create` | create a memory node (`[Baseline]/[Deviation]/[Result]/[Reusable judgment]`) |
-| `noc_update` | patch (old_string/new_string) or append to a memory; optional `relation` evolution marker |
+| `noc_search` | search memories (semantic + keyword / trigger recall via `search_memory`) |
+| `noc_create` | create a memory node (`[Baseline]`/`[Deviation]`/`[Result]`/`[Reusable judgment]`) |
+| `noc_update` | full replace, patch (old_string/new_string), or append; optional `relation` |
+| `noc_delete` | delete a memory by URI (`delete_memory`) |
 
 ## Quick start
 

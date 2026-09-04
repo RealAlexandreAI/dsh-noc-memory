@@ -1,6 +1,6 @@
 # Plugin bundle for dsh-noc-memory.
 # Registers the Noc Memory tools (noc_boot / read / search /
-# create / update). Configure your own Nocturne MCP server:
+# create / update / delete). Configure your own Nocturne MCP server:
 #
 #   - id: noc-memory
 #     name: 'dsh-noc-memory'
