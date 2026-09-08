@@ -14,7 +14,7 @@ Connects DeepSeek Harness to **Noc Memory**: session-start boot + daily briefing
 
 | tool | what it does |
 |---|---|
-| `noc_boot` | load at session start: core + recent + triggers (`system://boot`, `system://recent/5`, `system://triggers`) + briefing |
+| `noc_boot` | load at session start: `system://boot`, `system://recent/5`, `system://triggers`, then best-effort `system://briefing`; afterward read `system://focus` (recent is a briefing subset — no need to re-read it after boot) |
 | `noc_read` | read a memory by URI (`system://…`, `noc://agent`, …) |
 | `noc_search` | search memories (semantic + keyword / trigger recall via `search_memory`) |
 | `noc_create` | create a memory node (`[Baseline]`/`[Deviation]`/`[Result]`/`[Reusable judgment]`) |
