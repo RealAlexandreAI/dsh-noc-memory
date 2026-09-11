@@ -1,6 +1,6 @@
 {
   "name": "dsh-noc-memory",
-  "version": "0.3.7",
+  "version": "0.3.8",
   "description": "DeepSeek Harness plugin: Nocturne Memory client — automated long-term memory (boot/read/search/create/update/delete) backed by your own Nocturne MCP server.",
   "type": "module",
   "main": "dist/index.js",
@@ -38,13 +38,14 @@
     "typescript": "^5.5.0"
   },
   "dsh": {
+    "manifestVersion": 1,
     "bundle": {
       "patch": "./cordis.patch.yml"
     }
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/RealAlexandreAI/dsh-noc-memory.git"
+    "url": "https://github.com/RealAlexandreAI/dsh-noc-memory"
   },
   "engines": {
     "node": ">=20.0.0"
